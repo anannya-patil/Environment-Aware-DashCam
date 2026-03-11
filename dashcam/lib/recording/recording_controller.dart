@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'recording_manager.dart';
+import '../sensors/sensor_manager.dart';
+import '../models/sensor_data.dart';
 
 class RecordingController extends StatefulWidget {
   const RecordingController({super.key});
@@ -12,7 +14,9 @@ class RecordingController extends StatefulWidget {
 class _RecordingControllerState extends State<RecordingController> {
 
   final RecordingManager manager = RecordingManager();
+  final SensorManager sensorManager = SensorManager();
 
+  bool autoTriggered = false;
   bool isRecording = false;
   bool isCameraInitialized = false;
 
@@ -20,6 +24,27 @@ class _RecordingControllerState extends State<RecordingController> {
   void initState() {
     super.initState();
     initializeCamera();
+
+    sensorManager.onSensorData = (SensorData data) {
+
+      // Auto start recording if speed greater than 0.5 km/h
+      if(data.speed > 0.5 && !isRecording && !autoTriggered) {
+
+        autoTriggered = true;
+
+        print("[Auto] Vehicle moving. Starting recording...");
+
+        manager.startRecording();
+
+        setState(() {
+          isRecording = true;
+        });
+
+      }
+
+    };
+
+    sensorManager.startSensorCollection();
   }
 
   Future<void> initializeCamera() async {
@@ -102,6 +127,7 @@ class _RecordingControllerState extends State<RecordingController> {
 
   @override
   void dispose() {
+    sensorManager.stopSensorCollection();
     manager.dispose();
     super.dispose();
   }
