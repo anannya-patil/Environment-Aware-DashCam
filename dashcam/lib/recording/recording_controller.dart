@@ -20,39 +20,54 @@ class _RecordingControllerState extends State<RecordingController> {
   bool isRecording = false;
   bool isCameraInitialized = false;
 
+  double speed = 0;
+
   @override
   void initState() {
     super.initState();
     initializeCamera();
 
-    sensorManager.onSensorData = (SensorData data) {
+    sensorManager.onSensorData = (SensorData data) async {
 
-      // Auto start recording if speed greater than 0.5 km/h
-      if(data.speed > 0.5 && !isRecording && !autoTriggered) {
+      speed = data.speed;
+
+      if (data.speed > 0.5 &&
+          manager.controller != null &&
+          manager.controller!.value.isInitialized &&
+          !manager.controller!.value.isRecordingVideo &&
+          !autoTriggered) {
 
         autoTriggered = true;
 
-        print("[Auto] Vehicle moving. Starting recording...");
+        try {
+          await manager.startRecording();
 
-        manager.startRecording();
+          setState(() {
+            isRecording = true;
+          });
 
-        setState(() {
-          isRecording = true;
-        });
-
+        } catch (e) {
+          debugPrint("[Auto Error] $e");
+        }
       }
 
+      setState(() {});
     };
 
     sensorManager.startSensorCollection();
   }
 
   Future<void> initializeCamera() async {
-    await manager.initializeCamera();
+    try {
+      await manager.initializeCamera();
 
-    setState(() {
-      isCameraInitialized = true;
-    });
+      setState(() {
+        isCameraInitialized = true;
+      });
+
+    } catch (e) {
+      debugPrint("Camera init error: $e");
+    }
   }
 
   @override
@@ -60,30 +75,48 @@ class _RecordingControllerState extends State<RecordingController> {
 
     if (!isCameraInitialized || manager.controller == null) {
       return const Scaffold(
+        backgroundColor: Colors.black,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Dashcam Recorder"),
-      ),
-
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
 
-          // Camera Preview
-          CameraPreview(manager.controller!),
+          Positioned.fill(
+            child: CameraPreview(manager.controller!),
+          ),
 
-          // Recording Indicator
+          Positioned(
+            top: 40,
+            left: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "${speed.toStringAsFixed(1)} km/h",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
           if (isRecording)
-            const Positioned(
-              top: 20,
-              left: 20,
+            Positioned(
+              top: 40,
+              right: 20,
               child: Row(
-                children: [
-                  Icon(Icons.circle, color: Colors.red, size: 14),
-                  SizedBox(width: 8),
+                children: const [
+                  Icon(Icons.circle, color: Colors.red, size: 12),
+                  SizedBox(width: 6),
                   Text(
                     "REC",
                     style: TextStyle(
@@ -93,34 +126,59 @@ class _RecordingControllerState extends State<RecordingController> {
                   )
                 ],
               ),
-            )
+            ),
+
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: () async {
+
+                  try {
+
+                    if (!manager.controller!.value.isRecordingVideo) {
+
+                      await manager.startRecording();
+
+                      setState(() {
+                        isRecording = true;
+                      });
+
+                    } else {
+
+                      final path = await manager.stopRecording();
+
+                      debugPrint("Video saved at: $path");
+
+                      setState(() {
+                        isRecording = false;
+                      });
+                    }
+
+                  } catch (e) {
+                    debugPrint("Recording error: $e");
+                  }
+                },
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isRecording ? Colors.red : Colors.white,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: Icon(
+                    isRecording ? Icons.stop : Icons.circle,
+                    color: isRecording ? Colors.white : Colors.red,
+                    size: 30,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-
-          if (!isRecording) {
-
-            await manager.startRecording();
-
-          } else {
-
-            final path = await manager.stopRecording();
-
-            debugPrint("Video saved at: $path");
-
-          }
-
-          setState(() {
-            isRecording = !isRecording;
-          });
-
-        },
-
-        child: Icon(
-          isRecording ? Icons.stop : Icons.videocam,
-        ),
       ),
     );
   }

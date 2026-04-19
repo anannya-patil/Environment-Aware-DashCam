@@ -21,6 +21,8 @@ class SensorManager
 
   double _speed = 0;
 
+  int _logCounter = 0;
+
   Function(SensorData)? onSensorData;
 
   Future<void> startSensorCollection() async
@@ -46,7 +48,7 @@ class SensorManager
     _positionSubscription =
         Geolocator.getPositionStream().listen((Position position)
     {
-      _speed = position.speed * 3.6;   //convert m/s to km/h
+      _speed = position.speed * 3.6;
     });
 
     print("[Sensor] Sensor collection started");
@@ -74,7 +76,12 @@ class SensorManager
       gyroZ: _gyroZ,
     );
 
-    print("[Sensor] Speed: ${data.speed.toStringAsFixed(2)} km/h");
+    _logCounter++;
+
+    if(_logCounter % 20 == 0)
+    {
+      print("[Sensor] Speed: ${data.speed.toStringAsFixed(2)} km/h");
+    }
 
     if(onSensorData != null)
     {

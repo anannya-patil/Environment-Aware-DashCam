@@ -26,38 +26,87 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Environment Aware DashCam"),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+
+              const SizedBox(height: 20),
+
+              const Text(
+                "DashCam",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              _buildCard(
+                context,
+                title: "Sensor Test",
+                icon: Icons.sensors,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SensorTestPage(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              _buildCard(
+                context,
+                title: "Start Dashcam",
+                icon: Icons.videocam,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RecordingController(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    );
+  }
+
+  Widget _buildCard(BuildContext context,
+      {required String title,
+      required IconData icon,
+      required VoidCallback onTap}) {
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade800),
+        ),
+        child: Row(
           children: [
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SensorTestPage(),
-                  ),
-                );
-              },
-              child: const Text("Open Sensor Test"),
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const RecordingController(),
-                  ),
-                );
-              },
-              child: const Text("Open Dashcam Recorder"),
+            Icon(icon, color: Colors.blue, size: 30),
+            const SizedBox(width: 20),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ),
             ),
           ],
         ),

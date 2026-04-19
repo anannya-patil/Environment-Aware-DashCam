@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -11,74 +10,110 @@ class RecordingManager {
 
   // Initialize rear camera
   Future<void> initializeCamera() async {
-    _cameras = await availableCameras();
+    try {
+      _cameras = await availableCameras();
 
-    final rearCamera = _cameras!.firstWhere(
-      (camera) => camera.lensDirection == CameraLensDirection.back,
-    );
+      final rearCamera = _cameras!.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+      );
 
-    _cameraController = CameraController(
-      rearCamera,
-      ResolutionPreset.high,
-      enableAudio: true,
-    );
+      _cameraController = CameraController(
+        rearCamera,
+        ResolutionPreset.high,
+        enableAudio: false, // 🔥 keep this OFF (prevents MediaRecorder crash)
+      );
 
-    await _cameraController!.initialize();
+      await _cameraController!.initialize();
+
+      print("[Camera] Initialized successfully");
+
+    } catch (e) {
+      print("[Camera Init Error] $e");
+      rethrow;
+    }
   }
 
   // Start recording
   Future<void> startRecording() async {
-    if (_cameraController == null ||
-        !_cameraController!.value.isInitialized) {
-      throw Exception("Camera not initialized");
-    }
+    try {
+      if (_cameraController == null ||
+          !_cameraController!.value.isInitialized) {
+        throw Exception("Camera not initialized");
+      }
 
-    if (_cameraController!.value.isRecordingVideo) {
-      return;
-    }
+      if (_cameraController!.value.isRecordingVideo) {
+        print("[Recording] Already recording");
+        return;
+      }
 
-    await _cameraController!.startVideoRecording();
+      print("[Recording] Preparing camera for video...");
+
+      await _cameraController!.prepareForVideoRecording();
+
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      print("[Recording] Starting video recording...");
+
+      await _cameraController!.startVideoRecording();
+
+      print("[Recording] Recording started");
+
+    } catch (e) {
+      print("[Start Recording Error] $e");
+      rethrow;
+    }
   }
 
   // Stop recording
   Future<String> stopRecording() async {
-    if (_cameraController == null ||
-        !_cameraController!.value.isRecordingVideo) {
-      throw Exception("Recording not started");
+    try {
+      if (_cameraController == null ||
+          !_cameraController!.value.isRecordingVideo) {
+        throw Exception("Recording not started");
+      }
+
+      print("[Recording] Stopping recording...");
+
+      final XFile videoFile =
+          await _cameraController!.stopVideoRecording();
+
+      print("[Recording] File captured: ${videoFile.path}");
+
+      final savedPath = await _saveVideoLocally(videoFile);
+
+      return savedPath;
+
+    } catch (e) {
+      print("[Stop Recording Error] $e");
+      rethrow;
     }
-
-    final XFile videoFile =
-        await _cameraController!.stopVideoRecording();
-
-    final savedPath = await _saveVideoLocally(videoFile);
-
-    return savedPath;
   }
 
-  // Save video in Dashcam folder
+  // ✅ SAFE SAVE (INTERNAL STORAGE — WILL WORK 100%)
   Future<String> _saveVideoLocally(XFile videoFile) async {
-    final directory = await getApplicationDocumentsDirectory();
+    try {
+      final directory = await getApplicationDocumentsDirectory();
 
-    final dashcamDir =
-        Directory(path.join(directory.path, "Dashcam", "recordings"));
+      final fileName =
+          "recording_${DateTime.now().millisecondsSinceEpoch}.mp4";
 
-    if (!await dashcamDir.exists()) {
-      await dashcamDir.create(recursive: true);
+      final newPath = path.join(directory.path, fileName);
+
+      await videoFile.saveTo(newPath);
+
+      print("[Save] Saved internally: $newPath");
+
+      return newPath;
+
+    } catch (e) {
+      print("[Save Error] $e");
+      rethrow;
     }
-
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-    final fileName = "recording_$timestamp.mp4";
-
-    final newPath = path.join(dashcamDir.path, fileName);
-
-    final savedFile = await File(videoFile.path).copy(newPath);
-
-    return savedFile.path;
   }
 
   // Dispose camera
   void dispose() {
     _cameraController?.dispose();
+    print("[Camera] Disposed");
   }
 }
