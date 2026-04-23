@@ -33,7 +33,7 @@ dependencies:
 
   sensors_plus: ^4.0.2      # accelerometer, gyroscope
   geolocator: ^10.1.0    #gps loction, speed calculation
-  telephony: ^0.2.0
+  
   url_launcher: ^6.2.5
 
   # The following adds the Cupertino Icons font to your application.

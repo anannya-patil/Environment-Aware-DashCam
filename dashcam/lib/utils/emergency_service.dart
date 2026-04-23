@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../ui/emergency_alert_page.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:telephony/telephony.dart';
+import '../ui/emergency_alert_page.dart';
 import 'location_service.dart';
 
 class EmergencyService {
-  static final Telephony telephony = Telephony.instance;
+
+  // 🔥 Toggle this (TRUE for emulator testing)
+  static const bool debugMode = true;
 
   static void trigger(BuildContext context) {
     Navigator.push(
@@ -33,26 +34,56 @@ class EmergencyService {
       message += "\nLocation: $locationLink";
     }
 
-    // 2. Send SMS (TEMP NUMBERS — replace later with Person 2 data)
     List<String> contacts = [
       "1234567890",
       "9876543210"
     ];
 
+    // 🔥 DEBUG MODE (EMULATOR)
+    if (debugMode) {
+      print("Contacts: $contacts");
+      print("Message: $message");
+
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("DEBUG: Emergency Triggered"),
+          content: Text(
+            "Contacts: $contacts\n\nMessage:\n$message",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+
+      return;
+    }
+
+    // 🔥 REAL MODE (PHONE)
     for (String number in contacts) {
       try {
-        await telephony.sendSms(
-          to: number,
-          message: message,
+        final Uri smsUri = Uri(
+          scheme: 'sms',
+          path: number,
+          queryParameters: {'body': message},
         );
+
+        await launchUrl(smsUri);
       } catch (e) {
-        print("SMS failed to $number: $e");
+        print("SMS failed for $number: $e");
       }
     }
 
-    // 3. Call primary contact (first number)
     try {
-      final Uri callUri = Uri(scheme: 'tel', path: contacts.first);
+      final Uri callUri = Uri(
+        scheme: 'tel',
+        path: contacts.first,
+      );
+
       await launchUrl(callUri);
     } catch (e) {
       print("Call failed: $e");

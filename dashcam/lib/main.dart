@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'sensors/sensor_manager.dart';
 import 'models/sensor_data.dart';
 import 'recording/recording_controller.dart';
+import 'utils/emergency_service.dart'; // ✅ ADDED
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,6 +76,19 @@ class HomePage extends StatelessWidget {
                   );
                 },
               ),
+
+              const SizedBox(height: 20),
+
+              // 🔥 NEW EMERGENCY TEST BUTTON
+              _buildCard(
+                context,
+                title: "Test Emergency",
+                icon: Icons.warning,
+                onTap: () {
+                  EmergencyService.trigger(context);
+                },
+              ),
+
             ],
           ),
         ),
