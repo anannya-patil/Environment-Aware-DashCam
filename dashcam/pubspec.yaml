@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  shared_preferences: ^2.2.2
 
   sensors_plus: ^4.0.2      # accelerometer, gyroscope
   geolocator: ^10.1.0    #gps loction, speed calculation
