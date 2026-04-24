@@ -6,7 +6,7 @@ import 'location_service.dart';
 class EmergencyService {
 
   // 🔥 Toggle this (TRUE for emulator testing)
-  static const bool debugMode = true;
+  static const bool debugMode = false;
 
   static void trigger(BuildContext context) {
     Navigator.push(
@@ -64,6 +64,8 @@ class EmergencyService {
     }
 
     // 🔥 REAL MODE (PHONE)
+
+    // 👉 Send SMS to contacts (one by one)
     for (String number in contacts) {
       try {
         final Uri smsUri = Uri(
@@ -73,11 +75,19 @@ class EmergencyService {
         );
 
         await launchUrl(smsUri);
+
+        // 🔥 Delay between SMS openings
+        await Future.delayed(const Duration(seconds: 2));
+
       } catch (e) {
         print("SMS failed for $number: $e");
       }
     }
 
+    // 🔥 Delay before calling
+    await Future.delayed(const Duration(seconds: 2));
+
+    // 👉 Call primary contact
     try {
       final Uri callUri = Uri(
         scheme: 'tel',
