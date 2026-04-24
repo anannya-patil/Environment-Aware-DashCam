@@ -5,7 +5,6 @@ import 'location_service.dart';
 
 class EmergencyService {
 
-  // 🔥 Toggle this (TRUE for emulator testing)
   static const bool debugMode = false;
 
   static void trigger(BuildContext context) {
@@ -24,7 +23,7 @@ class EmergencyService {
   static Future<void> _handleEmergency(BuildContext context) async {
     Navigator.pop(context);
 
-    print("🚨 EMERGENCY TRIGGERED 🚨");
+    print("EMERGENCY TRIGGERED");
 
     // 1. Get location
     String? locationLink = await LocationService.getLocationLink();
@@ -35,11 +34,10 @@ class EmergencyService {
     }
 
     List<String> contacts = [
-      "1234567890",
-      "9876543210"
+      "123456789",
+      "987654321"
     ];
 
-    // 🔥 DEBUG MODE (EMULATOR)
     if (debugMode) {
       print("Contacts: $contacts");
       print("Message: $message");
@@ -63,9 +61,6 @@ class EmergencyService {
       return;
     }
 
-    // 🔥 REAL MODE (PHONE)
-
-    // 👉 Send SMS to contacts (one by one)
     for (String number in contacts) {
       try {
         final Uri smsUri = Uri(
@@ -76,7 +71,7 @@ class EmergencyService {
 
         await launchUrl(smsUri);
 
-        // 🔥 Delay between SMS openings
+        //Delay between SMS openings
         await Future.delayed(const Duration(seconds: 2));
 
       } catch (e) {
@@ -84,10 +79,10 @@ class EmergencyService {
       }
     }
 
-    // 🔥 Delay before calling
+    //Delay before calling
     await Future.delayed(const Duration(seconds: 2));
 
-    // 👉 Call primary contact
+    //Call primary contact
     try {
       final Uri callUri = Uri(
         scheme: 'tel',
