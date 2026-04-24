@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../ui/emergency_alert_page.dart';
 import 'location_service.dart';
+import '../utils/storage_service.dart';
+import '../models/contact.dart';
 
 class EmergencyService {
 
@@ -25,7 +27,6 @@ class EmergencyService {
 
     print("EMERGENCY TRIGGERED");
 
-    // 1. Get location
     String? locationLink = await LocationService.getLocationLink();
 
     String message = "Possible accident detected.";
@@ -33,10 +34,16 @@ class EmergencyService {
       message += "\nLocation: $locationLink";
     }
 
-    List<String> contacts = [
-      "123456789",
-      "987654321"
-    ];
+    List<ContactModel> savedContacts =
+        await StorageService.getContacts();
+
+    List<String> contacts =
+        savedContacts.map((c) => c.phone).toList();
+
+    if (contacts.isEmpty) {
+      print("No emergency contacts found");
+      return;
+    }
 
     if (debugMode) {
       print("Contacts: $contacts");
@@ -61,32 +68,29 @@ class EmergencyService {
       return;
     }
 
-    for (String number in contacts) {
-      try {
-        final Uri smsUri = Uri(
-          scheme: 'sms',
-          path: number,
-          queryParameters: {'body': message},
-        );
+    String number = contacts.first;
 
-        await launchUrl(smsUri);
+    try {
+      final Uri smsUri = Uri(
+        scheme: 'sms',
+        path: number,
+        queryParameters: {'body': message},
+      );
 
-        //Delay between SMS openings
-        await Future.delayed(const Duration(seconds: 2));
+      await launchUrl(smsUri);
 
-      } catch (e) {
-        print("SMS failed for $number: $e");
-      }
+      await Future.delayed(const Duration(seconds: 2));
+
+    } catch (e) {
+      print("SMS failed: $e");
     }
 
-    //Delay before calling
     await Future.delayed(const Duration(seconds: 2));
 
-    //Call primary contact
     try {
       final Uri callUri = Uri(
         scheme: 'tel',
-        path: contacts.first,
+        path: number,
       );
 
       await launchUrl(callUri);
