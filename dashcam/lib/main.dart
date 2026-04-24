@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'sensors/sensor_manager.dart';
 import 'models/sensor_data.dart';
 import 'recording/recording_controller.dart';
-import 'utils/emergency_service.dart'; // ✅ ADDED
+import 'utils/emergency_service.dart';
+import 'utils/storage_service.dart';
+import 'models/contact.dart';
+import 'ui/add_contact_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +24,33 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+
+  String userName = "User";
+  List<ContactModel> contacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  void loadData() async {
+    final user = await StorageService.getUser();
+    final savedContacts = await StorageService.getContacts();
+
+    setState(() {
+      userName = user?.name ?? "User";
+      contacts = savedContacts;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,36 +60,102 @@ class HomePage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
-              const Text(
-                "DashCam",
-                style: TextStyle(
+              Text(
+                "Hi, $userName",
+                style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 32,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
 
-              _buildCard(
-                context,
-                title: "Sensor Test",
-                icon: Icons.sensors,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SensorTestPage(),
-                    ),
-                  );
-                },
+              const Text(
+                "Emergency Contacts",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+
+              contacts.isEmpty
+                  ? const Text(
+                      "No contacts added",
+                      style: TextStyle(color: Colors.white38),
+                    )
+                  : Column(
+                      children: contacts.asMap().entries.map<Widget>((entry) {
+
+                        int index = entry.key;
+                        ContactModel c = entry.value;
+
+                        return ListTile(
+                          title: Text(c.name, style: const TextStyle(color: Colors.white)),
+                          subtitle: Text(c.phone, style: const TextStyle(color: Colors.white54)),
+
+                          // ✏️ EDIT
+                          onTap: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddContactPage(
+                                  existingContact: c,
+                                  index: index,
+                                ),
+                              ),
+                            );
+
+                            if (result == true) {
+                              loadData();
+                            }
+                          },
+
+                          // 🗑 DELETE
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+
+                              List<ContactModel> contacts =
+                                  await StorageService.getContacts();
+
+                              contacts.removeAt(index);
+
+                              await StorageService.saveContacts(contacts);
+
+                              loadData();
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    ElevatedButton(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddContactPage(),
+                          ),
+                        );
+
+                        if (result == true) {
+                          loadData();
+                        }
+                      },
+                      child: const Text("Add Contact"),
+                    ),
+
+              const SizedBox(height: 30),
 
               _buildCard(
                 context,
@@ -79,7 +173,6 @@ class HomePage extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // 🔥 NEW EMERGENCY TEST BUTTON
               _buildCard(
                 context,
                 title: "Test Emergency",
@@ -88,7 +181,6 @@ class HomePage extends StatelessWidget {
                   EmergencyService.trigger(context);
                 },
               ),
-
             ],
           ),
         ),
