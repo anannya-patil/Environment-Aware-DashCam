@@ -2,8 +2,6 @@ import 'dart:math';
 
 import '../models/sensor_data.dart';
 import '../models/anomaly_event.dart';
-import '../recording/recording_manager.dart';
-import '../utils/emergency_service.dart';
 
 class AnomalyEngine {
   // ================= BUFFER =================
@@ -21,8 +19,8 @@ class AnomalyEngine {
   DateTime? lastTriggerTime;
   final Duration cooldown = const Duration(seconds: 3);
 
-  // 🔥 FIX 2: INSTANCE of RecordingManager
-  final RecordingManager _recordingManager = RecordingManager();
+  // 🔥 NEW: CALLBACK
+  Function(AnomalyEvent)? onAnomalyDetected;
 
   // ================= ENTRY =================
   void processSensorData(SensorData data) {
@@ -212,13 +210,10 @@ class AnomalyEngine {
     );
   }
 
-  // ================= TRIGGER =================
+  // ================= CALLBACK TRIGGER =================
   void _handleEvent(AnomalyEvent event) {
-    if (event.severity == "ANOMALY") {
-      _recordingManager.startRecording();
-    } else if (event.severity == "EMERGENCY") {
-      _recordingManager.startRecording();
-      EmergencyService.trigger(); // assume static (most likely correct)
+    if (onAnomalyDetected != null) {
+      onAnomalyDetected!(event);
     }
   }
 }

@@ -3,6 +3,9 @@ import 'package:camera/camera.dart';
 import 'recording_manager.dart';
 import '../sensors/sensor_manager.dart';
 import '../models/sensor_data.dart';
+import '../anomaly/anomaly_engine.dart';
+import '../models/anomaly_event.dart';
+import '../utils/emergency_service.dart';
 
 class RecordingController extends StatefulWidget {
   const RecordingController({super.key});
@@ -16,6 +19,9 @@ class _RecordingControllerState extends State<RecordingController> {
   final RecordingManager manager = RecordingManager();
   final SensorManager sensorManager = SensorManager();
 
+  // 🔥 NEW: Anomaly Engine
+  final AnomalyEngine anomalyEngine = AnomalyEngine();
+
   bool autoTriggered = false;
   bool isRecording = false;
   bool isCameraInitialized = false;
@@ -25,20 +31,16 @@ class _RecordingControllerState extends State<RecordingController> {
   @override
   void initState() {
     super.initState();
+
     initializeCamera();
 
-    sensorManager.onSensorData = (SensorData data) async {
+    // 🔥 CONNECT CALLBACK
+    anomalyEngine.onAnomalyDetected = (AnomalyEvent event) async {
 
-      speed = data.speed;
+      debugPrint("[ANOMALY DETECTED] ${event.type} - ${event.severity}");
 
-      if (data.speed > 0.5 &&
-          manager.controller != null &&
-          manager.controller!.value.isInitialized &&
-          !manager.controller!.value.isRecordingVideo &&
-          !autoTriggered) {
-
-        autoTriggered = true;
-
+      // Start recording if not already
+      if (!manager.controller!.value.isRecordingVideo) {
         try {
           await manager.startRecording();
 
@@ -47,8 +49,40 @@ class _RecordingControllerState extends State<RecordingController> {
           });
 
         } catch (e) {
-          debugPrint("[Auto Error] $e");
+          debugPrint("[Recording Error] $e");
         }
+      }
+
+      // Trigger emergency ONLY for EMERGENCY
+      if (event.severity == "EMERGENCY") {
+        EmergencyService.trigger(context);
+      }
+    };
+
+    // 🔥 SENSOR FLOW
+    sensorManager.onSensorData = (SensorData data) {
+
+      speed = data.speed;
+
+      // 🔥 SEND DATA TO ENGINE
+      anomalyEngine.processSensorData(data);
+
+      // Existing auto-record (optional safety fallback)
+      if (data.speed > 0.5 &&
+          manager.controller != null &&
+          manager.controller!.value.isInitialized &&
+          !manager.controller!.value.isRecordingVideo &&
+          !autoTriggered) {
+
+        autoTriggered = true;
+
+        manager.startRecording().then((_) {
+          setState(() {
+            isRecording = true;
+          });
+        }).catchError((e) {
+          debugPrint("[Auto Error] $e");
+        });
       }
 
       setState(() {});
