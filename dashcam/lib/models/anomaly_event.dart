@@ -1,17 +1,15 @@
 import 'sensor_data.dart';
 
-class AnomalyEvent
-{
+class AnomalyEvent {
   final String type;
+  final String severity; // ✅ FIXED
   final DateTime timestamp;
-  final double severity;
-  final SensorData sensorSnapshot;
+  final List<SensorData> sensorSnapshot; // ✅ FIXED
 
-  AnomalyEvent(
-  {
+  AnomalyEvent({
     required this.type,
     required this.timestamp,
     required this.severity,
-    required this.sensorSnapshot
+    required this.sensorSnapshot,
   });
 }
