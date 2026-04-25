@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'sensors/sensor_manager.dart';
 import 'models/sensor_data.dart';
 import 'recording/recording_controller.dart';
+import 'recording/recording_page.dart';
 import 'utils/emergency_service.dart';
 import 'utils/storage_service.dart';
 import 'models/contact.dart';
@@ -166,6 +167,22 @@ class _HomePageState extends State<HomePage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const RecordingController(),
+                    ),
+                  );
+                },
+              ),
+              
+              const SizedBox(height: 20),
+
+              _buildCard(
+                context,
+                title: "Saved Recordings",
+                icon: Icons.video_library,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RecordingsPage(),
                     ),
                   );
                 },
