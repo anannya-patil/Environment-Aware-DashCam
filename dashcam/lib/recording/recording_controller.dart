@@ -34,57 +34,8 @@ class _RecordingControllerState extends State<RecordingController> {
 
     initializeCamera();
 
-    // 🔥 CONNECT CALLBACK
-    anomalyEngine.onAnomalyDetected = (AnomalyEvent event) async {
-
-      debugPrint("[ANOMALY DETECTED] ${event.type} - ${event.severity}");
-
-      // Start recording if not already
-      if (!manager.controller!.value.isRecordingVideo) {
-        try {
-          await manager.startRecording();
-
-          setState(() {
-            isRecording = true;
-          });
-
-        } catch (e) {
-          debugPrint("[Recording Error] $e");
-        }
-      }
-
-      // Trigger emergency ONLY for EMERGENCY
-      if (event.severity == "EMERGENCY") {
-        EmergencyService.trigger(context);
-      }
-    };
-
-    // 🔥 SENSOR FLOW
     sensorManager.onSensorData = (SensorData data) {
-
       speed = data.speed;
-
-      // 🔥 SEND DATA TO ENGINE
-      anomalyEngine.processSensorData(data);
-
-      // Existing auto-record (optional safety fallback)
-      if (data.speed > 0.5 &&
-          manager.controller != null &&
-          manager.controller!.value.isInitialized &&
-          !manager.controller!.value.isRecordingVideo &&
-          !autoTriggered) {
-
-        autoTriggered = true;
-
-        manager.startRecording().then((_) {
-          setState(() {
-            isRecording = true;
-          });
-        }).catchError((e) {
-          debugPrint("[Auto Error] $e");
-        });
-      }
-
       setState(() {});
     };
 
