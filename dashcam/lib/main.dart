@@ -8,6 +8,7 @@ import 'utils/emergency_service.dart';
 import 'utils/storage_service.dart';
 import 'models/contact.dart';
 import 'ui/add_contact_page.dart';
+import 'utils/main_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,10 +38,13 @@ class _HomePageState extends State<HomePage> {
 
   String userName = "User";
   List<ContactModel> contacts = [];
+  late MainController mainController;
 
   @override
   void initState() {
     super.initState();
+    mainController = MainController();
+    mainController.start();
     requestPermissions();
     loadData();
   }
