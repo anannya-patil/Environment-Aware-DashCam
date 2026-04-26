@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'sensors/sensor_manager.dart';
 import 'models/sensor_data.dart';
 import 'recording/recording_controller.dart';
@@ -7,6 +8,7 @@ import 'utils/emergency_service.dart';
 import 'utils/storage_service.dart';
 import 'models/contact.dart';
 import 'ui/add_contact_page.dart';
+import 'utils/main_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +38,34 @@ class _HomePageState extends State<HomePage> {
 
   String userName = "User";
   List<ContactModel> contacts = [];
+  late MainController mainController;
 
   @override
   void initState() {
     super.initState();
+    mainController = MainController();
+    mainController.onUIEvent = (message) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      });
+    };
+    mainController.start();
+    requestPermissions();
     loadData();
+  }
+
+  Future<void> requestPermissions() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      await Geolocator.requestPermission();
+    }
   }
 
   void loadData() async {
@@ -60,7 +85,8 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
@@ -102,7 +128,6 @@ class _HomePageState extends State<HomePage> {
                           title: Text(c.name, style: const TextStyle(color: Colors.white)),
                           subtitle: Text(c.phone, style: const TextStyle(color: Colors.white54)),
 
-                          // ✏️ EDIT
                           onTap: () async {
                             final result = await Navigator.push(
                               context,
@@ -119,7 +144,6 @@ class _HomePageState extends State<HomePage> {
                             }
                           },
 
-                          // 🗑 DELETE
                           trailing: IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () async {
@@ -138,23 +162,23 @@ class _HomePageState extends State<HomePage> {
                       }).toList(),
                     ),
 
-                    const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-                    ElevatedButton(
-                      onPressed: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AddContactPage(),
-                          ),
-                        );
-
-                        if (result == true) {
-                          loadData();
-                        }
-                      },
-                      child: const Text("Add Contact"),
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AddContactPage(),
                     ),
+                  );
+
+                  if (result == true) {
+                    loadData();
+                  }
+                },
+                child: const Text("Add Contact"),
+              ),
 
               const SizedBox(height: 30),
 
@@ -171,7 +195,7 @@ class _HomePageState extends State<HomePage> {
                   );
                 },
               ),
-              
+
               const SizedBox(height: 20),
 
               _buildCard(
@@ -195,11 +219,12 @@ class _HomePageState extends State<HomePage> {
                 title: "Test Emergency",
                 icon: Icons.warning,
                 onTap: () {
-                  EmergencyService.trigger(context);
+                  EmergencyService.trigger(context: context); // ✅ FIXED LINE
                 },
               ),
             ],
           ),
+        ),
         ),
       ),
     );
@@ -231,74 +256,6 @@ class _HomePageState extends State<HomePage> {
                 fontSize: 18,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SensorTestPage extends StatefulWidget {
-  const SensorTestPage({super.key});
-
-  @override
-  State<SensorTestPage> createState() {
-    return _SensorTestPageState();
-  }
-}
-
-class _SensorTestPageState extends State<SensorTestPage> {
-  final SensorManager sensorManager = SensorManager();
-
-  double speed = 0;
-  double ax = 0;
-  double ay = 0;
-  double az = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    sensorManager.onSensorData = (SensorData data) {
-      setState(() {
-        speed = data.speed;
-        ax = data.accelX;
-        ay = data.accelY;
-        az = data.accelZ;
-      });
-    };
-
-    sensorManager.startSensorCollection();
-  }
-
-  @override
-  void dispose() {
-    sensorManager.stopSensorCollection();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Sensor Test"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-
-            Text(
-              "Speed: ${speed.toStringAsFixed(2)} km/h",
-              style: const TextStyle(fontSize: 20),
-            ),
-
-            const SizedBox(height: 20),
-
-            Text("Accel X: ${ax.toStringAsFixed(2)}"),
-            Text("Accel Y: ${ay.toStringAsFixed(2)}"),
-            Text("Accel Z: ${az.toStringAsFixed(2)}"),
-
           ],
         ),
       ),

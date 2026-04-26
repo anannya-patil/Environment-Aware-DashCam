@@ -9,23 +9,33 @@ class EmergencyService {
 
   static const bool debugMode = false;
 
-  static void trigger(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EmergencyAlertPage(
-          onTimeout: () {
-            _handleEmergency(context);
-          },
+  static void trigger({BuildContext? context}) {
+    if (context != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => EmergencyAlertPage(
+            onTimeout: () {
+              _handleEmergency(context: context);
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      triggerWithoutUI();
+    }
   }
 
-  static Future<void> _handleEmergency(BuildContext context) async {
-    Navigator.pop(context);
+  static Future<void> triggerWithoutUI() async {
+    await Future.delayed(const Duration(seconds: 5));
+    await _handleEmergency();
+  }
 
-    print("EMERGENCY TRIGGERED");
+  static Future<void> _handleEmergency({BuildContext? context}) async {
+
+    if (context != null) {
+      Navigator.pop(context);
+    }
 
     String? locationLink = await LocationService.getLocationLink();
 
@@ -41,61 +51,47 @@ class EmergencyService {
         savedContacts.map((c) => c.phone).toList();
 
     if (contacts.isEmpty) {
-      print("No emergency contacts found");
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No emergency contacts added")),
+        );
+      }
       return;
     }
 
-    if (debugMode) {
-      print("Contacts: $contacts");
-      print("Message: $message");
+    if (debugMode) return;
 
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text("DEBUG: Emergency Triggered"),
-          content: Text(
-            "Contacts: $contacts\n\nMessage:\n$message",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
+    for (String number in contacts) {
+      try {
+        final Uri smsUri = Uri(
+          scheme: 'sms',
+          path: number,
+          queryParameters: {'body': message},
+        );
 
-      return;
-    }
+        await launchUrl(smsUri);
+        await Future.delayed(const Duration(seconds: 2));
 
-    String number = contacts.first;
-
-    try {
-      final Uri smsUri = Uri(
-        scheme: 'sms',
-        path: number,
-        queryParameters: {'body': message},
-      );
-
-      await launchUrl(smsUri);
-
-      await Future.delayed(const Duration(seconds: 2));
-
-    } catch (e) {
-      print("SMS failed: $e");
+      } catch (e) {
+        print("SMS failed for $number: $e");
+      }
     }
 
     await Future.delayed(const Duration(seconds: 2));
 
-    try {
-      final Uri callUri = Uri(
-        scheme: 'tel',
-        path: number,
-      );
+    for (String number in contacts) {
+      try {
+        final Uri callUri = Uri(
+          scheme: 'tel',
+          path: number,
+        );
 
-      await launchUrl(callUri);
-    } catch (e) {
-      print("Call failed: $e");
+        await launchUrl(callUri);
+        await Future.delayed(const Duration(seconds: 3));
+
+      } catch (e) {
+        print("Call failed for $number: $e");
+      }
     }
   }
 }

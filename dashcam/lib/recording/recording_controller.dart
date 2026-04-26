@@ -3,6 +3,9 @@ import 'package:camera/camera.dart';
 import 'recording_manager.dart';
 import '../sensors/sensor_manager.dart';
 import '../models/sensor_data.dart';
+import '../anomaly/anomaly_engine.dart';
+import '../models/anomaly_event.dart';
+import '../utils/emergency_service.dart';
 
 class RecordingController extends StatefulWidget {
   const RecordingController({super.key});
@@ -16,6 +19,9 @@ class _RecordingControllerState extends State<RecordingController> {
   final RecordingManager manager = RecordingManager();
   final SensorManager sensorManager = SensorManager();
 
+  // 🔥 NEW: Anomaly Engine
+  final AnomalyEngine anomalyEngine = AnomalyEngine();
+
   bool autoTriggered = false;
   bool isRecording = false;
   bool isCameraInitialized = false;
@@ -25,32 +31,11 @@ class _RecordingControllerState extends State<RecordingController> {
   @override
   void initState() {
     super.initState();
+
     initializeCamera();
 
-    sensorManager.onSensorData = (SensorData data) async {
-
+    sensorManager.onSensorData = (SensorData data) {
       speed = data.speed;
-
-      if (data.speed > 0.5 &&
-          manager.controller != null &&
-          manager.controller!.value.isInitialized &&
-          !manager.controller!.value.isRecordingVideo &&
-          !autoTriggered) {
-
-        autoTriggered = true;
-
-        try {
-          await manager.startRecording();
-
-          setState(() {
-            isRecording = true;
-          });
-
-        } catch (e) {
-          debugPrint("[Auto Error] $e");
-        }
-      }
-
       setState(() {});
     };
 
