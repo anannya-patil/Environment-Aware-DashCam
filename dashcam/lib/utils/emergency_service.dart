@@ -9,7 +9,6 @@ class EmergencyService {
 
   static const bool debugMode = false;
 
-  // UI trigger (with countdown)
   static void trigger({BuildContext? context}) {
     if (context != null) {
       Navigator.push(
@@ -27,13 +26,11 @@ class EmergencyService {
     }
   }
 
-  // 🔥 NON-UI TRIGGER (for anomaly engine)
   static Future<void> triggerWithoutUI() async {
     await Future.delayed(const Duration(seconds: 5));
     await _handleEmergency();
   }
 
-  // 🔥 CORE LOGIC
   static Future<void> _handleEmergency({BuildContext? context}) async {
 
     if (context != null) {
@@ -64,7 +61,6 @@ class EmergencyService {
 
     if (debugMode) return;
 
-    // SEND SMS
     for (String number in contacts) {
       try {
         final Uri smsUri = Uri(
@@ -83,7 +79,6 @@ class EmergencyService {
 
     await Future.delayed(const Duration(seconds: 2));
 
-    // CALL CONTACTS
     for (String number in contacts) {
       try {
         final Uri callUri = Uri(
