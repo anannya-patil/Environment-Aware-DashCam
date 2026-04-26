@@ -54,13 +54,13 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
       body: isReady
           ? Column(
               children: [
-                /// VIDEO AREA (FIXED)
+                /// VIDEO AREA
                 Expanded(
                   child: Center(
                     child: AspectRatio(
                       aspectRatio: controller.value.aspectRatio,
                       child: Container(
-                        color: Colors.black, // prevents visual artifacts
+                        color: Colors.black,
                         child: VideoPlayer(controller),
                       ),
                     ),
@@ -115,60 +115,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
               ],
             )
           : const Center(child: CircularProgressIndicator()),
-      body: Center(
-        child: isReady
-            ? SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AspectRatio(
-                      aspectRatio: controller.value.aspectRatio,
-                      child: VideoPlayer(controller),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    VideoProgressIndicator(
-                      controller,
-                      allowScrubbing: true,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    ValueListenableBuilder(
-                      valueListenable: controller,
-                      builder: (context, value, child) {
-                        return Text(
-                          "${format(controller.value.position)} / ${format(controller.value.duration)}",
-                          style: const TextStyle(color: Colors.white),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    IconButton(
-                      iconSize: 60,
-                      color: Colors.white,
-                      icon: Icon(
-                        controller.value.isPlaying
-                            ? Icons.pause_circle
-                            : Icons.play_circle,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          controller.value.isPlaying
-                              ? controller.pause()
-                              : controller.play();
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              )
-            : const CircularProgressIndicator(),
-      ),
     );
   }
 }
