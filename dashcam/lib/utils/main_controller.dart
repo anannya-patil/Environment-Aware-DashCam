@@ -11,28 +11,56 @@ class MainController {
   final RecordingManager recordingManager = RecordingManager();
 
   bool isRecording = false;
+  bool isHandlingEmergency = false;
+
+  Function(String message)? onUIEvent;
 
   Future<void> start() async {
 
     await recordingManager.initializeCamera();
 
-    sensorManager.onSensorData = (SensorData data) async {
+    anomalyEngine.onAnomalyDetected = (event) async {
 
-      final event = anomalyEngine.processSensorData(data);
+      print("[Main] Anomaly detected: ${event.type}");
 
-      if (event != null) {
+      if (!isRecording) {
+        isRecording = true;
+        await recordingManager.startRecording();
+        Future.delayed(const Duration(milliseconds: 300), () {
+          onUIEvent?.call("Auto recording started");
+        });
+      }
 
-        print("[Main] Anomaly detected: ${event.type}");
+      if (event.severity == "EMERGENCY" && !isHandlingEmergency) {
+
+        isHandlingEmergency = true;
+
+        Future.delayed(const Duration(milliseconds: 300), () {
+          onUIEvent?.call("Emergency detected");
+        });
 
         if (!isRecording) {
           isRecording = true;
           await recordingManager.startRecording();
         }
 
-        if (event.severity == "EMERGENCY") {
-          EmergencyService.triggerWithoutUI();
-        }
+        await Future.delayed(const Duration(seconds: 5));
+
+        final path = await recordingManager.stopRecording();
+        print("[Main] Auto-saved recording: $path");
+
+        isRecording = false;
+
+        await EmergencyService.triggerWithoutUI();
+
+        await Future.delayed(const Duration(seconds: 15));
+
+        isHandlingEmergency = false;
       }
+    };
+
+    sensorManager.onSensorData = (SensorData data) {
+      anomalyEngine.processSensorData(data);
     };
 
     sensorManager.startSensorCollection();

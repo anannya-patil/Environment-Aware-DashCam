@@ -44,6 +44,13 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     mainController = MainController();
+    mainController.onUIEvent = (message) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      });
+    };
     mainController.start();
     requestPermissions();
     loadData();
@@ -78,7 +85,8 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
@@ -216,6 +224,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
