@@ -8,6 +8,7 @@ import 'utils/emergency_service.dart';
 import 'utils/storage_service.dart';
 import 'models/contact.dart';
 import 'ui/add_contact_page.dart';
+import 'utils/main_controller.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,10 +38,20 @@ class _HomePageState extends State<HomePage> {
 
   String userName = "User";
   List<ContactModel> contacts = [];
+  late MainController mainController;
 
   @override
   void initState() {
     super.initState();
+    mainController = MainController();
+    mainController.onUIEvent = (message) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      });
+    };
+    mainController.start();
     requestPermissions();
     loadData();
   }
@@ -74,7 +85,8 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
+          child: SingleChildScrollView(
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
@@ -212,6 +224,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );
