@@ -51,6 +51,70 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
         title: const Text("Playback"),
         backgroundColor: Colors.black,
       ),
+      body: isReady
+          ? Column(
+              children: [
+                /// VIDEO AREA (FIXED)
+                Expanded(
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: controller.value.aspectRatio,
+                      child: Container(
+                        color: Colors.black, // prevents visual artifacts
+                        child: VideoPlayer(controller),
+                      ),
+                    ),
+                  ),
+                ),
+
+                /// CONTROLS
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    children: [
+                      VideoProgressIndicator(
+                        controller,
+                        allowScrubbing: true,
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 20),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      ValueListenableBuilder(
+                        valueListenable: controller,
+                        builder: (context, value, child) {
+                          return Text(
+                            "${format(controller.value.position)} / ${format(controller.value.duration)}",
+                            style: const TextStyle(color: Colors.white),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      IconButton(
+                        iconSize: 60,
+                        color: Colors.white,
+                        icon: Icon(
+                          controller.value.isPlaying
+                              ? Icons.pause_circle
+                              : Icons.play_circle,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            controller.value.isPlaying
+                                ? controller.pause()
+                                : controller.play();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : const Center(child: CircularProgressIndicator()),
       body: Center(
         child: isReady
             ? SingleChildScrollView(
