@@ -219,7 +219,7 @@ class _HomePageState extends State<HomePage> {
                 title: "Test Emergency",
                 icon: Icons.warning,
                 onTap: () {
-                  EmergencyService.trigger(context: context); // ✅ FIXED LINE
+                  EmergencyService.trigger(context: context);
                 },
               ),
             ],

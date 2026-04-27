@@ -8,27 +8,26 @@ class AnomalyEngine {
   final List<SensorData> _buffer = [];
   final Duration bufferDuration = const Duration(seconds: 5);
 
-  // ================= FRAME COUNTERS =================
+  //frame counters
   int crashCount = 0;
   int brakeCount = 0;
   int turnCount = 0;
   int impactCount = 0;
   int rolloverCount = 0;
 
-  // ================= COOLDOWN =================
+  //cooldown
   DateTime? lastTriggerTime;
   final Duration cooldown = const Duration(seconds: 3);
 
-  // 🔥 NEW: CALLBACK
+  //callback
   Function(AnomalyEvent)? onAnomalyDetected;
 
-  // ================= ENTRY =================
+  //entry
   void processSensorData(SensorData data) {
     _addToBuffer(data);
 
     if (_inCooldown(data.timestamp)) return;
 
-    // 🔥 SYNC FIX (time window)
     final shortWindow = _getRecent(const Duration(milliseconds: 150));
     if (shortWindow.isEmpty) return;
 
@@ -58,7 +57,7 @@ class AnomalyEngine {
     }
   }
 
-  // ================= BUFFER =================
+  //buffer
   void _addToBuffer(SensorData data) {
     _buffer.add(data);
 
@@ -76,7 +75,7 @@ class AnomalyEngine {
         .toList();
   }
 
-  // ================= DERIVED =================
+  //derived
   double _accelMagnitude(SensorData d) {
     return sqrt(
           d.accelX * d.accelX +
@@ -112,7 +111,7 @@ class AnomalyEngine {
     return now.difference(lastTriggerTime!) < cooldown;
   }
 
-  // ================= CORE DETECTION =================
+  //core detection
   AnomalyEvent? _detectEvent(
     SensorData data,
     double accelMag,
@@ -123,7 +122,7 @@ class AnomalyEngine {
     double gyroMax,
     double gravityShift,
   ) {
-    // ---------- CRASH ----------
+    //crash
     bool crashEmergency =
         accelMag >= 6.0 && data.speed >= 30 && speedDrop >= 30;
 
@@ -137,7 +136,7 @@ class AnomalyEngine {
           "CRASH", crashEmergency ? "EMERGENCY" : "ANOMALY");
     }
 
-    // ---------- HARD BRAKE ----------
+    //hard brake
     bool brakeEmergency =
         speedDrop >= 25 && forwardAccel <= -2.5;
 
@@ -151,7 +150,7 @@ class AnomalyEngine {
           "HARD_BRAKE", brakeEmergency ? "EMERGENCY" : "ANOMALY");
     }
 
-    // ---------- TURN ----------
+    //turn
     bool turnEmergency =
         gyroZ >= 5.0 && lateralAccel >= 2.5 && data.speed >= 30;
 
@@ -165,7 +164,7 @@ class AnomalyEngine {
           "TURN", turnEmergency ? "EMERGENCY" : "ANOMALY");
     }
 
-    // ---------- STATIONARY IMPACT ----------
+    //stationary impact
     bool impactEmergency =
         data.speed <= 5 && accelMag >= 4.0;
 
@@ -180,7 +179,7 @@ class AnomalyEngine {
           impactEmergency ? "EMERGENCY" : "ANOMALY");
     }
 
-    // ---------- ROLLOVER ----------
+    //rollover
     bool rollEmergency =
         gyroMax >= 4.0 && gravityShift >= 1.0;
 
@@ -198,7 +197,7 @@ class AnomalyEngine {
     return null;
   }
 
-  // ================= EVENT =================
+  //event
   AnomalyEvent _createEvent(String type, String severity) {
     final snapshot = _getRecent(const Duration(seconds: 2));
 
@@ -210,7 +209,7 @@ class AnomalyEngine {
     );
   }
 
-  // ================= CALLBACK TRIGGER =================
+  //callback trigger
   void _handleEvent(AnomalyEvent event) {
     if (onAnomalyDetected != null) {
       onAnomalyDetected!(event);

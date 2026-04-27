@@ -19,7 +19,6 @@ class _RecordingControllerState extends State<RecordingController> {
   final RecordingManager manager = RecordingManager();
   final SensorManager sensorManager = SensorManager();
 
-  // 🔥 NEW: Anomaly Engine
   final AnomalyEngine anomalyEngine = AnomalyEngine();
 
   bool autoTriggered = false;
