@@ -8,7 +8,7 @@ class StorageService
   static const String userKey = "user";
   static const String contactsKey = "contacts";
 
-  // USER
+  //user
 
   static Future<void> saveUser(UserModel user) async
   {
@@ -26,7 +26,7 @@ class StorageService
     return UserModel.fromMap(jsonDecode(data));
   }
 
-  // CONTACTS
+  //contacts
 
   static Future<void> saveContacts(List<ContactModel> contacts) async
   {

@@ -21,7 +21,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
     loadVideos();
   }
 
-  // LOAD VIDEOS
+  //load videos
   Future<void> loadVideos() async {
     setState(() {
       isLoading = true;
@@ -44,17 +44,17 @@ class _RecordingsPageState extends State<RecordingsPage> {
     });
   }
 
-  // GET FILE NAME
+  //get file name
   String getFileName(String path) {
     return path.split('/').last;
   }
 
-  // FORMAT DATE
+  //format date
   String formatDate(DateTime date) {
     return DateFormat('dd MMM yyyy, hh:mm a').format(date);
   }
 
-  // DELETE VIDEO
+  //delete video
   Future<void> deleteVideo(FileSystemEntity file) async {
     await file.delete();
     loadVideos();
@@ -66,7 +66,7 @@ class _RecordingsPageState extends State<RecordingsPage> {
     );
   }
 
-  // CONFIRM DELETE
+  //confirm delete
   void showDeleteDialog(FileSystemEntity file) {
     showDialog(
       context: context,

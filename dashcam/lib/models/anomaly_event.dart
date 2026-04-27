@@ -2,9 +2,9 @@ import 'sensor_data.dart';
 
 class AnomalyEvent {
   final String type;
-  final String severity; // ✅ FIXED
+  final String severity;
   final DateTime timestamp;
-  final List<SensorData> sensorSnapshot; // ✅ FIXED
+  final List<SensorData> sensorSnapshot;
 
   AnomalyEvent({
     required this.type,
