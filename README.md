@@ -40,6 +40,34 @@ Each detected event is classified into:
 
 ---
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/screenshots/home-page.jpeg" width="180"/>
+  <img src="assets/screenshots/permissions.jpeg" width="180"/>
+  <img src="assets/screenshots/recording.jpeg" width="180"/>
+</p>
+
+<p align="center">
+  <b>Home Dashboard</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b>Permissions</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b>Recording Interface</b>
+</p>
+
+<br>
+
+<p align="center">
+  <img src="assets/screenshots/saved-recordings.jpeg" width="180"/>
+  <img src="assets/screenshots/emergency-alert.jpeg" width="180"/>
+</p>
+
+<p align="center">
+  <b>Saved Recordings</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <b>Emergency Alert</b>
+</p>
+
+---
+
 ## System Architecture
 
 ```text
