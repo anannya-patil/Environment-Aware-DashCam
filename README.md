@@ -162,7 +162,7 @@ flutter run
 
 ## Contributors
 
-* [Aniket Mandar Patankar](https://github.com/Aniket-317)
 * [Anannya Yogesh Patil](https://github.com/anannya-patil)
+* [Aniket Mandar Patankar](https://github.com/Aniket-317)
 * [Ishan Amod Patankar](https://github.com/IshanPats)
 * [Parth Rakesh Khadiwala](https://github.com/Parth-1611)
